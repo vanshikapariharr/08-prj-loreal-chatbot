@@ -141,3 +141,57 @@ body {
 .site-footer a:hover {
   color: #666666;
 }
+body {
+  font-family: "Montserrat", Arial, Helvetica, sans-serif;
+  background: #fff;
+  color: #111;
+}
+
+.site-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo {
+  width: 120px;
+  height: auto;
+}
+
+.chat-window {
+  background: #fcfcfc;
+  border: 1px solid #e6e6e6;
+  border-radius: 18px;
+}
+
+.msg {
+  max-width: 80%;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  border-radius: 16px;
+}
+
+.msg.user {
+  margin-left: auto;
+  background: #111;
+  color: white;
+}
+
+.msg.ai {
+  margin-right: auto;
+  background: #f2f2f2;
+  color: #111;
+}
+
+.msg-label {
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 6px;
+  opacity: 0.75;
+}
+
+.msg-text {
+  font-size: 16px;
+  line-height: 1.5;
+}

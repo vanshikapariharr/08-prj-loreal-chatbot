@@ -1,66 +1,90 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Chat Assistant</title>
-    <link
-      href="https://fonts.googleapis.com/icon?family=Material+Icons"
-      rel="stylesheet"
-    />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;500;700&display=swap"
-      rel="stylesheet"
-    />
-    <link rel="stylesheet" href="style.css" />
-  </head>
+const chatForm = document.getElementById("chatForm");
+const userInput = document.getElementById("userInput");
+const chatWindow = document.getElementById("chatWindow");
 
-  <body>
-    <div class="page-wrapper">
-      <!------- Header / Branding ------->
-      <header class="site-header">
-        <h1 class="site-title">Smart Product Advisor</h1>
-      </header>
+const WORKER_URL = "https://YOUR-WORKER-URL.workers.dev";
 
-      <!------- Chat Area ------->
-      <main>
-        <section class="chatbox">
-          <div id="chatWindow" class="chat-window">
-            <!-- messages will be appended here via JS -->
-          </div>
+const messages = [
+  {
+    role: "system",
+    content:
+      "You are a helpful L'Oréal beauty advisor. Only answer questions about L'Oréal products, skincare, makeup, haircare, fragrance, routines, ingredients, and product recommendations. If the user asks about anything unrelated, politely refuse and redirect them to L'Oréal beauty topics. Keep responses friendly, concise, and useful.",
+  },
+];
 
-          <form id="chatForm" class="chat-form">
-            <label for="userInput" class="visually-hidden">Message</label>
-            <input
-              id="userInput"
-              name="userInput"
-              type="text"
-              placeholder="Ask me about products or routines…"
-              autocomplete="off"
-              required
-            />
-            <button type="submit" id="sendBtn">
-              <span class="material-icons">send</span>
-              <span class="visually-hidden">Send</span>
-            </button>
-          </form>
-        </section>
-      </main>
+function scrollToBottom() {
+  chatWindow.scrollTop = chatWindow.scrollHeight;
+}
 
-      <!------- Footer Links ------->
-      <footer class="site-footer">
-        <p>&copy; 2025 Company Name. All rights reserved.</p>
-        <nav>
-          <!-- These URLs are placeholders -->
-          <a href="#">Privacy Policy</a>
-          <a href="#">Terms of Use</a>
-          <a href="#">Contact</a>
-        </nav>
-      </footer>
-    </div>
+function addMessage(role, text) {
+  const bubble = document.createElement("div");
+  bubble.className = `msg ${role}`;
 
-    <!-- secrets.js can be removed when using Cloudflare Workers for API requests -->
-    <script src="secrets.js"></script>
-    <script src="script.js"></script>
-  </body>
-</html>
+  const label = document.createElement("div");
+  label.className = "msg-label";
+  label.textContent = role === "user" ? "You" : "L'Oréal Advisor";
+
+  const content = document.createElement("div");
+  content.className = "msg-text";
+  content.textContent = text;
+
+  bubble.appendChild(label);
+  bubble.appendChild(content);
+  chatWindow.appendChild(bubble);
+  scrollToBottom();
+
+  return bubble;
+}
+
+function showTyping() {
+  const bubble = document.createElement("div");
+  bubble.className = "msg ai typing";
+  bubble.innerHTML = `<div class="msg-label">L'Oréal Advisor</div><div class="msg-text">Typing...</div>`;
+  chatWindow.appendChild(bubble);
+  scrollToBottom();
+  return bubble;
+}
+
+addMessage(
+  "ai",
+  "Hi! I am your L'Oréal beauty advisor. Ask me about products, routines, or what to use for your skin or hair type."
+);
+
+chatForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const text = userInput.value.trim();
+  if (!text) return;
+
+  userInput.value = "";
+  userInput.focus();
+
+  messages.push({ role: "user", content: text });
+  addMessage("user", text);
+
+  const typingBubble = showTyping();
+
+  try {
+    const response = await fetch(WORKER_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ messages }),
+    });
+
+    const data = await response.json();
+
+    typingBubble.remove();
+
+    const reply =
+      data?.choices?.[0]?.message?.content ||
+      data?.error ||
+      "Sorry, I could not generate a response right now.";
+
+    messages.push({ role: "assistant", content: reply });
+    addMessage("ai", reply);
+  } catch (error) {
+    typingBubble.remove();
+    addMessage("ai", "Sorry, something went wrong connecting to the chatbot.");
+    console.error(error);
+  }
+});
