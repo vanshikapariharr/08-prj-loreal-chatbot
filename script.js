@@ -2,7 +2,7 @@ const chatForm = document.getElementById("chatForm");
 const userInput = document.getElementById("userInput");
 const chatWindow = document.getElementById("chatWindow");
 
-const WORKER_URL = "https://YOUR-WORKER-URL.workers.dev";
+const WORKER_URL = "https://broad-tree-4f22.vparihar1.workers.dev"; // Replace with your actual worker URL
 
 const messages = [
   {
