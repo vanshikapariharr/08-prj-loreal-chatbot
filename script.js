@@ -2,13 +2,13 @@ const chatForm = document.getElementById("chatForm");
 const userInput = document.getElementById("userInput");
 const chatWindow = document.getElementById("chatWindow");
 
-const WORKER_URL = "https://broad-tree-4f22.vparihar1.workers.dev"; // Replace with your actual worker URL
+const WORKER_URL = "https://broad-tree-4f22.vpariha1.workers.dev";
 
 const messages = [
   {
     role: "system",
     content:
-      "You are a helpful L'Oréal beauty advisor. Only answer questions about L'Oréal products, skincare, makeup, haircare, fragrance, routines, ingredients, and product recommendations. If the user asks about anything unrelated, politely refuse and redirect them to L'Oréal beauty topics. Keep responses friendly, concise, and useful.",
+      "You are a helpful L'Oréal beauty advisor. Only answer questions about L'Oréal products, skincare, makeup, haircare, fragrance, routines, ingredients, and product recommendations. If the user asks about anything unrelated, politely refuse and redirect them to L'Oréal beauty topics. Keep responses friendly and concise.",
   },
 ];
 
@@ -26,7 +26,7 @@ function addMessage(role, text) {
 
   const content = document.createElement("div");
   content.className = "msg-text";
-  content.textContent = text;
+  content.textContent = String(text); // fixes [object Object]
 
   bubble.appendChild(label);
   bubble.appendChild(content);
@@ -39,9 +39,20 @@ function addMessage(role, text) {
 function showTyping() {
   const bubble = document.createElement("div");
   bubble.className = "msg ai typing";
-  bubble.innerHTML = `<div class="msg-label">L'Oréal Advisor</div><div class="msg-text">Typing...</div>`;
+
+  const label = document.createElement("div");
+  label.className = "msg-label";
+  label.textContent = "L'Oréal Advisor";
+
+  const content = document.createElement("div");
+  content.className = "msg-text";
+  content.textContent = "Typing...";
+
+  bubble.appendChild(label);
+  bubble.appendChild(content);
   chatWindow.appendChild(bubble);
   scrollToBottom();
+
   return bubble;
 }
 
@@ -67,18 +78,26 @@ chatForm.addEventListener("submit", async (e) => {
   try {
     const response = await fetch(WORKER_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({ messages }),
     });
 
     const data = await response.json();
-
     typingBubble.remove();
 
-    const reply =
-      data?.choices?.[0]?.message?.content ||
-      data?.error ||
+    const rawReply =
+      data?.choices?.[0]?.message?.content ??
+      data?.error ??
       "Sorry, I could not generate a response right now.";
+
+    const reply =
+      typeof rawReply === "string"
+        ? rawReply
+        : Array.isArray(rawReply)
+          ? rawReply.map((p) => p.text || JSON.stringify(p)).join(" ")
+          : JSON.stringify(rawReply);
 
     messages.push({ role: "assistant", content: reply });
     addMessage("ai", reply);
